@@ -9,7 +9,18 @@
     .line {
         fill: none;
         stroke: steelblue;
-        stroke-width: 1.5px;
+        stroke-width: 3px;
+    }
+
+    .grid line {
+        stroke: lightgrey;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+        stroke-dasharray: 5 5;
+    }
+
+    .grid path {
+        stroke-width: 0;
     }
 
 </style>
@@ -25,9 +36,8 @@
 
     var parseTime = d3.timeParse("%Y%m%d");
 
-    var x = d3.scaleTime().range([0, width]),
-            y = d3.scaleLinear().range([height, 0]),
-            z = d3.scaleOrdinal(d3.schemeCategory10);
+    var x = d3.scaleLinear().range([0, width]),
+            y = d3.scaleLinear().range([height, 0]);
 
     var line = d3.line()
             .curve(d3.curveBasis)
@@ -61,8 +71,6 @@
             })
         ]);
 
-        z.domain(presidents.map(function(c) { return c.id; }));
-
         g.append("g")
                 .attr("class", "axis axis--x")
                 .attr("transform", "translate(0," + height + ")")
@@ -78,6 +86,24 @@
                 .attr("fill", "#000")
                 .text("Change");
 
+        // add the X gridlines
+        g.append("g")
+            .attr("class", "grid")
+            .attr("transform", "translate(0, "+height+")")
+            .call(d3.axisBottom(x)
+                    .tickSize(-height)
+                    .tickFormat("")
+            );
+
+        // add the Y gridlines
+        g.append("g")
+            .attr("class", "grid")
+            .attr("transform", "translate(0, 0)")
+            .call(d3.axisLeft(y)
+                    .tickSize((-width))
+                    .tickFormat("")
+            );
+
         var president = g.selectAll(".president")
                 .data(presidents)
                 .enter().append("g")
@@ -87,7 +113,16 @@
                 .attr("class", "line")
                 .attr("d", function(d) { return line(d.values); })
                 .style("stroke", function(d) {
-                    return '#cccccc'; //z(d.id);
+                    return (d.id == 'Trump') ? 'red' : 'lightgray';
+                })
+                .on('mouseenter', function(d) {
+                    d3.select(this)
+                            .raise()
+                            .style("stroke", "blue");
+                })
+                .on('mouseleave', function(d) {
+                    d3.select(this)
+                            .style("stroke", (d.id == 'Trump') ? "red" : "lightgray");
                 });
 
         president.append("text")
@@ -100,6 +135,9 @@
                 .attr("x", 3)
                 .attr("dy", "0.35em")
                 .style("font", "10px sans-serif")
+                .style("fill", function(d) {
+                    return (d.id == 'Trump') ? 'red' : 'black';
+                })
                 .text(function(d) {
                     return d.id;
                 });
